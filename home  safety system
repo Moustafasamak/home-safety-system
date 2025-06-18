@@ -1,12 +1,11 @@
 #include <xc.h>
-#include "lcdd.h"  // ????? LCD
+#include "lcdd.h"  // LCD library
 
-#define _XTAL_FREQ 4000000  // ???????? 4MHz
+#define _XTAL_FREQ 4000000
 
 #define LED RC0
 #define BUZZER RC1
 #define PIR RB0
-#define SERVO RC2
 
 // Configuration bits
 #pragma config FOSC = HS
@@ -18,65 +17,35 @@
 #pragma config WRT = OFF
 #pragma config CP = OFF
 
-void Move_Servo_Open() {
-    int pulse;
-    for (pulse = 0; pulse < 50; pulse++) {
-        SERVO = 1;
-        __delay_us(2000);   // ???? 2ms = ????? ?????
-        SERVO = 0;
-        __delay_ms(18);     // ??? ???????? (20ms - 2ms)
-    }
-}
-
-void Move_Servo_Close() {
-    int pulse;
-    for (pulse = 0; pulse < 50; pulse++) {
-        SERVO = 1;
-        __delay_us(1000);   // ???? 1ms = ????? ???????
-        SERVO = 0;
-        __delay_ms(19);     // ??? ???????? (20ms - 1ms)
-    }
-}
-
 void main(void) {
-    // ????? ???????
-    TRISD = 0x00;      // LCD ????
-    TRISC0 = 0;        // LED ????
-    TRISC1 = 0;        // BUZZER ????
-    TRISC2 = 0;        // SERVO ????
-    TRISB0 = 1;        // PIR ????
+    // Set pin directions
+    TRISD = 0x00;   // PORTD for LCD (output)
+    TRISC0 = 0;     // RC0 as output for LED
+    TRISC1 = 0;     // RC1 as output for Buzzer
+    TRISB0 = 1;     // RB0 as input for PIR sensor
 
-    // ????? ?????? ??????????
+    // Initialize output values
     LED = 0;
     BUZZER = 0;
-    Lcd_Start();
 
+    // Initialize LCD
+    Lcd_Start();
     Lcd_Set_Cursor(1, 1);
     Lcd_Print_String("Motion System");
 
     while (1) {
         if (PIR) {
             LED = 1;
+            BUZZER = 1;
             Lcd_Set_Cursor(2, 1);
             Lcd_Print_String("Motion Detected ");
-
-            // ????? ????? ???? 3 ?????
-            BUZZER = 1;
-            __delay_ms(3000);
+            __delay_ms(300);   // Buzzer ON for 0.3 seconds
             BUZZER = 0;
-
-            // ??? ???????
-            Move_Servo_Open();
         } else {
             LED = 0;
+            BUZZER = 0;
             Lcd_Set_Cursor(2, 1);
             Lcd_Print_String("No Motion      ");
-
-            // ????? ???????
-            Move_Servo_Close();
-
-            // ????? ?????
-            BUZZER = 0;
         }
         __delay_ms(200);
     }
